@@ -1,0 +1,3 @@
+/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/proyecto2.dir
+/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

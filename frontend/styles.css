@@ -1,0 +1,267 @@
+:root {
+    color-scheme: light;
+    --bg: #eef2f7;
+    --surface: #ffffff;
+    --line: #cbd5e1;
+    --text: #111827;
+    --muted: #64748b;
+    --particle: #2563eb;
+    --candidate: #f59e0b;
+    --collision: #ef4444;
+    --query: #7c3aed;
+    --boundary: #94a3b8;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 16px;
+    min-height: 100vh;
+    padding: 16px;
+}
+
+.stage-panel,
+.metrics-panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.stage-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+h1,
+h2,
+p {
+    margin: 0;
+}
+
+h1 {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#frameLabel {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+button {
+    min-width: 84px;
+    height: 36px;
+    border: 1px solid #94a3b8;
+    border-radius: 6px;
+    background: #f8fafc;
+    color: #0f172a;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #e2e8f0;
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+#simulationCanvas {
+    display: block;
+    width: 100%;
+    max-height: calc(100vh - 132px);
+    aspect-ratio: 1 / 1;
+    background: #ffffff;
+}
+
+.timeline {
+    padding: 10px 16px 14px;
+    border-top: 1px solid var(--line);
+}
+
+input[type="range"] {
+    width: 100%;
+}
+
+.metrics-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 16px;
+    overflow: auto;
+}
+
+dl {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+}
+
+dl div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+dt {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.legend {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: #334155;
+    font-size: 14px;
+}
+
+.legend li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(15, 23, 42, 0.2);
+}
+
+.swatch.particle {
+    background: var(--particle);
+}
+
+.swatch.candidate {
+    background: var(--candidate);
+}
+
+.swatch.collision {
+    background: var(--collision);
+}
+
+.swatch.query {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: var(--query);
+}
+
+.swatch.boundary {
+    border-radius: 3px;
+    background: transparent;
+    border-color: var(--boundary);
+}
+
+.hint {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+code {
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+body.space-mode {
+    --bg: #060814;
+    --surface: #0c1222;
+    --line: #1f2a44;
+    --text: #e5e7eb;
+    --muted: #94a3b8;
+    --boundary: #38bdf8;
+}
+
+body.space-mode .stage-panel,
+body.space-mode .metrics-panel {
+    box-shadow: 0 0 32px rgba(56, 189, 248, 0.08);
+}
+
+body.space-mode button {
+    border-color: #334155;
+    background: #111827;
+    color: #e5e7eb;
+}
+
+body.space-mode button:hover {
+    background: #1e293b;
+}
+
+body.space-mode code {
+    background: #111827;
+    color: #bae6fd;
+}
+
+@media (max-width: 920px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .controls {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    button {
+        min-width: 0;
+    }
+
+    #simulationCanvas {
+        max-height: none;
+    }
+}

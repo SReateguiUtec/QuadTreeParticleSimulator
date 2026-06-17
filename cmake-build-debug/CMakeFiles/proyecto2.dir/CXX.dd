@@ -1,0 +1,5 @@
+ninja_dyndep_version = 1.0
+build CMakeFiles/proyecto2.dir/Main.cpp.o: dyndep
+
+build CMakeFiles/proyecto2.dir/Structure.cpp.o: dyndep
+

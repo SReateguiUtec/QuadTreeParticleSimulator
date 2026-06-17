@@ -1,0 +1,42 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "GNU",
+	"compiler-id" : "GNU",
+	"compiler-simulate-id" : "",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"database-info" : null,
+	"dir-cur-bld" : "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug",
+	"dir-cur-src" : "/home/yit/universidad/2026/aed/proyecto2",
+	"dir-top-bld" : "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug",
+	"dir-top-src" : "/home/yit/universidad/2026/aed/proyecto2",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : [],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/proyecto2.dir",
+	"sources" : 
+	{
+		"CMakeFiles/proyecto2.dir/Experiment.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/yit/universidad/2026/aed/proyecto2/Experiment.cpp"
+		},
+		"CMakeFiles/proyecto2.dir/Main.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/yit/universidad/2026/aed/proyecto2/Main.cpp"
+		},
+		"CMakeFiles/proyecto2.dir/Structure.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/yit/universidad/2026/aed/proyecto2/Structure.cpp"
+		},
+		"CMakeFiles/proyecto2.dir/Visualization.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/yit/universidad/2026/aed/proyecto2/Visualization.cpp"
+		}
+	}
+}

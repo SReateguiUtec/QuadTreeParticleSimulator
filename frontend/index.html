@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QuadTree - Visualizacion dinamica</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="app-shell">
+    <section class="stage-panel">
+        <header class="toolbar">
+            <div>
+                <h1>QuadTree - simulacion 2D</h1>
+                <p id="frameLabel">Frame 0</p>
+            </div>
+            <div class="controls" aria-label="Controles de simulacion">
+                <button id="previousButton" type="button" title="Frame anterior">Anterior</button>
+                <button id="playButton" type="button" title="Reproducir o pausar">Pausar</button>
+                <button id="nextButton" type="button" title="Frame siguiente">Siguiente</button>
+                <button id="modeButton" type="button" title="Cambiar modo visual">Modo plano</button>
+            </div>
+        </header>
+
+        <canvas id="simulationCanvas" width="1000" height="1000"></canvas>
+
+        <div class="timeline">
+            <input id="frameSlider" type="range" min="0" max="0" value="0" aria-label="Frame">
+        </div>
+    </section>
+
+    <aside class="metrics-panel">
+        <h2>Metricas</h2>
+        <dl>
+            <div>
+                <dt>Particulas</dt>
+                <dd id="particleCount">0</dd>
+            </div>
+            <div>
+                <dt>Nodos QuadTree</dt>
+                <dd id="nodeCount">0</dd>
+            </div>
+            <div>
+                <dt>Nodos visitados</dt>
+                <dd id="nodesVisited">0</dd>
+            </div>
+            <div>
+                <dt>Particulas revisadas</dt>
+                <dd id="particlesChecked">0</dd>
+            </div>
+            <div>
+                <dt>Candidatos</dt>
+                <dd id="candidateCount">0</dd>
+            </div>
+            <div>
+                <dt>Colisiones</dt>
+                <dd id="collisionCount">0</dd>
+            </div>
+        </dl>
+
+        <h2>Leyenda</h2>
+        <ul class="legend">
+            <li><span class="swatch particle"></span>Particula</li>
+            <li><span class="swatch candidate"></span>Candidato</li>
+            <li><span class="swatch collision"></span>Colision</li>
+            <li><span class="swatch query"></span>Consulta</li>
+            <li><span class="swatch boundary"></span>QuadTree</li>
+        </ul>
+
+        <h2>Configuracion visual</h2>
+        <p class="hint">La cantidad de particulas se cambia en <code>Main.cpp</code>, variable <code>visualParticleCount</code>. Luego recompila y ejecuta para regenerar <code>visualization_data.js</code>.</p>
+    </aside>
+</main>
+
+<script src="../visualization_data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

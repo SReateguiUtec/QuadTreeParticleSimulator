@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug",
+  "command": "/usr/bin/c++ -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles/proyecto2.dir/Main.cpp.o -c /home/yit/universidad/2026/aed/proyecto2/Main.cpp",
+  "file": "/home/yit/universidad/2026/aed/proyecto2/Main.cpp",
+  "output": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/proyecto2.dir/Main.cpp.o"
+},
+{
+  "directory": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug",
+  "command": "/usr/bin/c++ -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles/proyecto2.dir/Structure.cpp.o -c /home/yit/universidad/2026/aed/proyecto2/Structure.cpp",
+  "file": "/home/yit/universidad/2026/aed/proyecto2/Structure.cpp",
+  "output": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/proyecto2.dir/Structure.cpp.o"
+},
+{
+  "directory": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug",
+  "command": "/usr/bin/c++ -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles/proyecto2.dir/Experiment.cpp.o -c /home/yit/universidad/2026/aed/proyecto2/Experiment.cpp",
+  "file": "/home/yit/universidad/2026/aed/proyecto2/Experiment.cpp",
+  "output": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/proyecto2.dir/Experiment.cpp.o"
+},
+{
+  "directory": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug",
+  "command": "/usr/bin/c++ -g -std=gnu++20 -fdiagnostics-color=always -o CMakeFiles/proyecto2.dir/Visualization.cpp.o -c /home/yit/universidad/2026/aed/proyecto2/Visualization.cpp",
+  "file": "/home/yit/universidad/2026/aed/proyecto2/Visualization.cpp",
+  "output": "/home/yit/universidad/2026/aed/proyecto2/cmake-build-debug/CMakeFiles/proyecto2.dir/Visualization.cpp.o"
+}
+]
