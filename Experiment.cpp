@@ -29,6 +29,9 @@ static Particle makeParticle(int id, double x, double y, double radius, mt19937&
     };
 }
 
+//////////////////////////////
+// Funcion minima: generar distribucion uniforme.
+//////////////////////////////
 static vector<Particle> generateUniformParticles(
     int n,
     double width,
@@ -55,6 +58,9 @@ static vector<Particle> generateUniformParticles(
     return particles;
 }
 
+//////////////////////////////
+// Funcion minima: generar distribucion con clusters.
+//////////////////////////////
 static vector<Particle> generateClusterParticles(
     int n,
     double width,
@@ -93,6 +99,9 @@ static vector<Particle> generateClusterParticles(
     return particles;
 }
 
+//////////////////////////////
+// Funcion minima: generar distribucion con una zona de alta densidad.
+//////////////////////////////
 static vector<Particle> generateHighDensityParticles(
     int n,
     double width,
@@ -174,6 +183,9 @@ vector<Particle> generateParticles(
     return {};
 }
 
+//////////////////////////////
+// Funcion minima: reconstruir el QuadTree por frame y comparar contra fuerza bruta.
+//////////////////////////////
 ExperimentResult runExperiment(
     DistributionType distribution,
     int particleCount,

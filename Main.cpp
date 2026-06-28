@@ -16,6 +16,7 @@ struct SimState {
     double             width    = 1000;
     double             height   = 1000;
     double             radius   = 4.0;
+    double             speed    = 1.5;
     int                capacity = 4;
     int                nextId   = 0;
 } sim;
@@ -30,6 +31,21 @@ static double jsonDouble(const string& body, const string& key, double def = 0.0
 }
 static int jsonInt(const string& body, const string& key, int def = 0) {
     return (int)jsonDouble(body, key, (double)def);
+}
+
+static void applySpeed(vector<Particle>& particles, double speed) {
+    for (Particle& p : particles) {
+        double magnitude = sqrt(p.vx * p.vx + p.vy * p.vy);
+        if (magnitude == 0) {
+            double angle = (p.id * 137.508) * M_PI / 180.0;
+            p.vx = speed * cos(angle);
+            p.vy = speed * sin(angle);
+            continue;
+        }
+
+        p.vx = p.vx / magnitude * speed;
+        p.vy = p.vy / magnitude * speed;
+    }
 }
 
 // CORS helper
@@ -56,6 +72,7 @@ int main() {
             if (req.has_param("w"))   sim.width    = stod(req.get_param_value("w"));
             if (req.has_param("h"))   sim.height   = stod(req.get_param_value("h"));
             if (req.has_param("r"))   sim.radius   = stod(req.get_param_value("r"));
+            if (req.has_param("spd")) sim.speed    = stod(req.get_param_value("spd"));
             if (req.has_param("cap")) sim.capacity = stoi(req.get_param_value("cap"));
         }
 
@@ -93,9 +110,15 @@ int main() {
     svr.Post("/particle", [](const httplib::Request& req, httplib::Response& res) {
         double x   = jsonDouble(req.body, "x");
         double y   = jsonDouble(req.body, "y");
-        double spd = jsonDouble(req.body, "speed", 1.5);
+        double defaultSpeed;
+        {
+            lock_guard<mutex> lk(sim.mtx);
+            defaultSpeed = sim.speed;
+        }
+        double spd = jsonDouble(req.body, "speed", defaultSpeed);
 
         lock_guard<mutex> lk(sim.mtx);
+        sim.speed = spd;
 
         x = max(sim.radius, min(sim.width  - sim.radius, x));
         y = max(sim.radius, min(sim.height - sim.radius, y));
@@ -132,20 +155,23 @@ int main() {
     svr.Post("/particles/generate", [](const httplib::Request& req, httplib::Response& res) {
         int    n    = jsonInt   (req.body, "n",    200);
         int    dist = jsonInt   (req.body, "dist",   0);
-        double w, h, r;
+        double w, h, r, defaultSpeed;
         {
             lock_guard<mutex> lk(sim.mtx);
-            w = sim.width; h = sim.height; r = sim.radius;
+            w = sim.width; h = sim.height; r = sim.radius; defaultSpeed = sim.speed;
         }
+        double spd  = jsonDouble(req.body, "speed", defaultSpeed);
 
         vector<Particle> generated;
         DistributionType dtype = (dist >= 0 && dist <= 2)
             ? static_cast<DistributionType>(dist)
             : DistributionType::Uniform;
         generated = generateParticles(dtype, n, w, h, r, rand());
+        applySpeed(generated, spd);
 
         {
             lock_guard<mutex> lk(sim.mtx);
+            sim.speed = spd;
             sim.particles.clear();
             sim.nextId = 0;
             for (auto& p : generated) { p.id = sim.nextId++; }

@@ -51,6 +51,9 @@ QuadNode::~QuadNode() {
   delete southwest;
 }
 
+//////////////////////////////
+// Funcion minima: insertar objetos en el QuadTree.
+//////////////////////////////
 bool QuadNode::insert(const Particle &p, int capacity) {
   if (!boundary.contains(p)) {
     return false;
@@ -77,6 +80,9 @@ bool QuadNode::insert(const Particle &p, int capacity) {
   return false;
 }
 
+//////////////////////////////
+// Funcion minima: subdividir regiones cuando se supera la capacidad maxima.
+//////////////////////////////
 void QuadNode::subdivide(int capacity) {
   double x = boundary.x;
   double y = boundary.y;
@@ -103,6 +109,9 @@ void QuadNode::subdivide(int capacity) {
   }
 }
 
+//////////////////////////////
+// Funcion minima: consultar objetos dentro de una region rectangular.
+//////////////////////////////
 void QuadNode::queryRange(const Rectangle &range, vector<Particle> &found,
                           QueryStats &stats) const {
   stats.nodesVisited++;
@@ -188,6 +197,9 @@ void QuadTree::queryRange(const Rectangle &range, vector<Particle> &found,
   root->queryRange(range, found, stats);
 }
 
+//////////////////////////////
+// Funcion minima: consultar objetos cercanos a un punto.
+//////////////////////////////
 vector<Particle> QuadTree::queryNearPoint(double x, double y,
                                           double radius) const {
   QueryStats stats{0, 0, 0};
@@ -219,6 +231,9 @@ void QuadTree::clear() { root->clear(); }
 
 void QuadTree::serialize(std::ostringstream &os) const { root->serialize(os); }
 
+//////////////////////////////
+// Funcion minima: actualizar posiciones de objetos frame por frame.
+//////////////////////////////
 void updateParticles(vector<Particle> &particles, double width, double height) {
   for (Particle &p : particles) {
     p.x += p.vx;
@@ -244,6 +259,9 @@ bool areColliding(const Particle &a, const Particle &b) {
   return distanceBetween(a, b) <= a.radius + b.radius;
 }
 
+//////////////////////////////
+// Funcion minima: solucion ingenua de fuerza bruta para comparar resultados.
+//////////////////////////////
 CollisionStats bruteForceCollisionStats(const vector<Particle> &particles) {
   CollisionStats stats{0, 0, 0, 0, 0};
 
@@ -260,6 +278,9 @@ CollisionStats bruteForceCollisionStats(const vector<Particle> &particles) {
   return stats;
 }
 
+//////////////////////////////
+// Funcion minima: detectar posibles colisiones usando el QuadTree.
+//////////////////////////////
 CollisionStats quadTreeCollisionStats(QuadTree &qt,
                                       const vector<Particle> &particles) {
   CollisionStats stats{0, 0, 0, 0, 0};

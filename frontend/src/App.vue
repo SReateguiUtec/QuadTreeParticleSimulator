@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, onUnmounted, nextTick } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import QuadCanvas from './components/QuadCanvas.vue';
 import MetricsCard from './components/MetricsCard.vue';
 import TreeGraphOverlay from './components/TreeGraphOverlay.vue';
@@ -24,7 +24,7 @@ const particleCount = ref(0);
 // Interactive mode: user clicks to add particles
 const interactiveMode = ref(true);
 
-const config = ref({ w: 1000, h: 1000, r: 4.0, cap: 4 });
+const config = ref({ w: 1000, h: 1000, r: 4.0, cap: 4, speed: 1.5 });
 const genConfig = ref({ n: 300, dist: 0 });
 
 const MAX_BUFFER = 300;
@@ -43,18 +43,10 @@ const startStream = async () => {
   isLoading.value  = true;
   isStreaming.value = false;
 
-  // Measure the canvas container to match simulation space to actual render area
-  await nextTick();
-  const rect = canvasContainerRef.value?.getBoundingClientRect();
-  const canvasW = rect ? Math.round(rect.width)  : 1200;
-  const canvasH = rect ? Math.round(rect.height) : 700;
-  config.value.w = canvasW;
-  config.value.h = canvasH;
-
-  // Configure the server dimensions first
   const params = new URLSearchParams({
     w: config.value.w, h: config.value.h,
-    r: config.value.r, cap: config.value.cap
+    r: config.value.r, cap: config.value.cap,
+    spd: config.value.speed
   });
 
   eventSource = new EventSource(`${BASE}/simulate/stream?${params}`);
@@ -98,7 +90,7 @@ const addParticle = async (simX, simY) => {
   await fetch(`${BASE}/particle`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ x: simX, y: simY, speed: 1.5 })
+    body: JSON.stringify({ x: simX, y: simY, speed: Number(config.value.speed) })
   });
 };
 
@@ -110,7 +102,11 @@ const generateParticles = async () => {
   await fetch(`${BASE}/particles/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ n: genConfig.value.n, dist: genConfig.value.dist })
+    body: JSON.stringify({
+      n: Number(genConfig.value.n),
+      dist: Number(genConfig.value.dist),
+      speed: Number(config.value.speed)
+    })
   });
 };
 
@@ -121,18 +117,13 @@ const onCanvasClick = (e) => {
   if (!interactiveMode.value || !simMeta.value) return;
 
   const rect = canvasContainerRef.value.getBoundingClientRect();
-  // The canvas is square and centered inside its container
-  const size    = Math.min(rect.width, rect.height);
-  const offsetX = (rect.width  - size) / 2;
-  const offsetY = (rect.height - size) / 2;
+  const pxX = e.clientX - rect.left;
+  const pxY = e.clientY - rect.top;
 
-  const pxX = e.clientX - rect.left  - offsetX;
-  const pxY = e.clientY - rect.top   - offsetY;
+  if (pxX < 0 || pxY < 0 || pxX > rect.width || pxY > rect.height) return;
 
-  if (pxX < 0 || pxY < 0 || pxX > size || pxY > size) return;
-
-  const simX = (pxX / size) * simMeta.value.width;
-  const simY = (pxY / size) * simMeta.value.height;
+  const simX = (pxX / rect.width) * simMeta.value.width;
+  const simY = (pxY / rect.height) * simMeta.value.height;
 
   addParticle(simX, simY);
 };
@@ -284,13 +275,28 @@ const speedup = computed(() =>
 
           <!-- Sim params -->
           <label class="flex flex-col gap-1">
+            <span class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase">Ancho 2D</span>
+            <input type="number" v-model.number="config.w" min="100"
+                   class="w-24 bg-white/5 border border-slate-800/60 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"/>
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase">Alto 2D</span>
+            <input type="number" v-model.number="config.h" min="100"
+                   class="w-24 bg-white/5 border border-slate-800/60 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"/>
+          </label>
+          <label class="flex flex-col gap-1">
             <span class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase">Capacidad Nodo</span>
-            <input type="number" v-model="config.cap" min="1" max="20"
+            <input type="number" v-model.number="config.cap" min="1" max="20"
                    class="w-24 bg-white/5 border border-slate-800/60 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"/>
           </label>
           <label class="flex flex-col gap-1">
             <span class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase">Radio Partícula</span>
-            <input type="number" step="0.5" v-model="config.r"
+            <input type="number" step="0.5" v-model.number="config.r"
+                   class="w-24 bg-white/5 border border-slate-800/60 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"/>
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-[10px] font-semibold tracking-widest text-slate-500 uppercase">Velocidad</span>
+            <input type="number" step="0.1" v-model.number="config.speed" min="0"
                    class="w-24 bg-white/5 border border-slate-800/60 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"/>
           </label>
 

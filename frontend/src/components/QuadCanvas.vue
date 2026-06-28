@@ -69,10 +69,29 @@ const drawBoundaries = () => {
 const drawQuery = () => {
   const x = sx(props.frame.query.x);
   const y = sy(props.frame.query.y);
+  const isRectangle = props.frame.query.type === 'rectangle';
   const r = sl(props.frame.query.radius);
+  const rw = sl(props.frame.query.w ?? props.frame.query.radius * 2);
+  const rh = (props.frame.query.h ?? props.frame.query.radius * 2) / props.data.height * H();
 
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
+
+  if (isRectangle) {
+    const left = x - rw / 2;
+    const top = y - rh / 2;
+    ctx.fillStyle = 'rgba(0, 230, 255, 0.055)';
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = 'rgba(0, 240, 255, 0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.rect(left, top, rw, rh);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    return;
+  }
 
   // Outer glow ring 1
   const glow1 = ctx.createRadialGradient(x, y, r * 0.7, x, y, r * 1.25);
@@ -213,9 +232,17 @@ const draw = () => {
     }
     ctx.stroke();
 
-    // Plain query circle
+    // Plain query region
     ctx.beginPath();
-    ctx.arc(sx(props.frame.query.x), sy(props.frame.query.y), sl(props.frame.query.radius), 0, Math.PI * 2);
+    if (props.frame.query.type === 'rectangle') {
+      const x = sx(props.frame.query.x);
+      const y = sy(props.frame.query.y);
+      const w = sl(props.frame.query.w ?? props.frame.query.radius * 2);
+      const h = (props.frame.query.h ?? props.frame.query.radius * 2) / props.data.height * H();
+      ctx.rect(x - w / 2, y - h / 2, w, h);
+    } else {
+      ctx.arc(sx(props.frame.query.x), sy(props.frame.query.y), sl(props.frame.query.radius), 0, Math.PI * 2);
+    }
     ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
     ctx.strokeStyle = '#6366f1';
     ctx.lineWidth = 1.5;

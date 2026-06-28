@@ -102,6 +102,8 @@ static void writeSvgVisualization(
     double height,
     double queryX,
     double queryY,
+    double queryWidth,
+    double queryHeight,
     double queryRadius
 ) {
     ofstream file(fileName);
@@ -120,7 +122,7 @@ static void writeSvgVisualization(
     file << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1200\" height=\"1100\" viewBox=\"0 0 1200 1100\">\n";
     file << "<rect width=\"1200\" height=\"1100\" fill=\"#f8fafc\"/>\n";
     file << "<text x=\"30\" y=\"35\" font-family=\"Arial\" font-size=\"24\" fill=\"#111827\">Visualizacion QuadTree - particulas, subdivisiones, consulta y colisiones</text>\n";
-    file << "<text x=\"30\" y=\"65\" font-family=\"Arial\" font-size=\"15\" fill=\"#374151\">Azul: particulas | Naranja: candidatos de la consulta | Rojo: particulas en colision | Morado: radio de consulta | Lineas grises: nodos del QuadTree</text>\n";
+    file << "<text x=\"30\" y=\"65\" font-family=\"Arial\" font-size=\"15\" fill=\"#374151\">Azul: particulas | Naranja: candidatos de la consulta rectangular | Rojo: particulas en colision | Morado: region consultada | Lineas grises: nodos del QuadTree</text>\n";
     file << "<g transform=\"translate(50, 80)\">\n";
     file << "<rect x=\"0\" y=\"0\" width=\"" << width << "\" height=\"" << height << "\" fill=\"#ffffff\" stroke=\"#111827\" stroke-width=\"2\"/>\n";
 
@@ -134,9 +136,10 @@ static void writeSvgVisualization(
              << "\" fill=\"none\" stroke=\"#9ca3af\" stroke-width=\"0.8\"/>\n";
     }
 
-    file << "<circle cx=\"" << queryX
-         << "\" cy=\"" << queryY
-         << "\" r=\"" << queryRadius
+    file << "<rect x=\"" << queryX - queryWidth / 2
+         << "\" y=\"" << queryY - queryHeight / 2
+         << "\" width=\"" << queryWidth
+         << "\" height=\"" << queryHeight
          << "\" fill=\"#8b5cf6\" fill-opacity=\"0.08\" stroke=\"#7c3aed\" stroke-width=\"3\"/>\n";
 
     for (const CollisionPair& collision : collisions) {
@@ -193,8 +196,11 @@ void generateVisualization(
 ) {
     double queryX = width / 2;
     double queryY = height / 2;
-    double queryRadius = 170;
+    double queryWidth = min(width, height) * 0.28;
+    double queryHeight = min(width, height) * 0.18;
+    double queryRadius = max(queryWidth, queryHeight) / 2;
     Rectangle world {width / 2, height / 2, width, height};
+    Rectangle queryArea {queryX, queryY, queryWidth, queryHeight};
     vector<Particle> particles = generateParticles(
         DistributionType::HighDensity,
         particleCount,
@@ -211,7 +217,8 @@ void generateVisualization(
     }
 
     QueryStats queryStats {0, 0, 0};
-    vector<Particle> queryCandidates = qt.queryNearPoint(queryX, queryY, queryRadius, queryStats);
+    vector<Particle> queryCandidates;
+    qt.queryRange(queryArea, queryCandidates, queryStats);
     vector<Rectangle> boundaries;
     vector<CollisionPair> collisions = findCollisionPairs(particles);
 
@@ -227,6 +234,8 @@ void generateVisualization(
         height,
         queryX,
         queryY,
+        queryWidth,
+        queryHeight,
         queryRadius
     );
 
@@ -247,7 +256,9 @@ void generateVisualizationFrames(
     int particleCount,
     int totalFrames
 ) {
-    double queryRadius = 170;
+    double queryWidth = min(width, height) * 0.28;
+    double queryHeight = min(width, height) * 0.18;
+    double queryRadius = max(queryWidth, queryHeight) / 2;
     Rectangle world {width / 2, height / 2, width, height};
     vector<Particle> particles = generateGalaxyParticles(
         particleCount,
@@ -273,6 +284,7 @@ void generateVisualizationFrames(
 
         double queryX = width / 2 + 145.0 * sin(frame * 0.08);
         double queryY = height / 2 + 110.0 * cos(frame * 0.06);
+        Rectangle queryArea {queryX, queryY, queryWidth, queryHeight};
         QuadTree qt(world, capacity);
 
         for (const Particle& particle : particles) {
@@ -280,7 +292,8 @@ void generateVisualizationFrames(
         }
 
         QueryStats queryStats {0, 0, 0};
-        vector<Particle> queryCandidates = qt.queryNearPoint(queryX, queryY, queryRadius, queryStats);
+        vector<Particle> queryCandidates;
+        qt.queryRange(queryArea, queryCandidates, queryStats);
         vector<Rectangle> boundaries;
         vector<CollisionPair> collisions = findCollisionPairs(particles);
         set<int> candidateIds;
@@ -294,7 +307,9 @@ void generateVisualizationFrames(
 
         file << "    {\n";
         file << "      index: " << frame << ",\n";
-        file << "      query: { x: " << queryX << ", y: " << queryY << ", radius: " << queryRadius << " },\n";
+        file << "      query: { type: \"rectangle\", x: " << queryX << ", y: " << queryY
+             << ", w: " << queryWidth << ", h: " << queryHeight
+             << ", radius: " << queryRadius << " },\n";
         file << "      metrics: { nodesVisited: " << queryStats.nodesVisited
              << ", particlesChecked: " << queryStats.particlesChecked
              << ", candidates: " << queryCandidates.size()
@@ -378,7 +393,9 @@ std::string generateVisualizationFramesJson(
     int totalFrames,
     int distributionType
 ) {
-    double queryRadius = std::min(width, height) * 0.17;
+    double queryWidth = std::min(width, height) * 0.28;
+    double queryHeight = std::min(width, height) * 0.18;
+    double queryRadius = std::max(queryWidth, queryHeight) / 2;
     Rectangle world {width / 2, height / 2, width, height};
     vector<Particle> particles;
     
@@ -408,6 +425,7 @@ std::string generateVisualizationFramesJson(
 
         double queryX = width / 2 + (width * 0.145) * sin(frame * 0.08);
         double queryY = height / 2 + (height * 0.110) * cos(frame * 0.06);
+        Rectangle queryArea {queryX, queryY, queryWidth, queryHeight};
         QuadTree qt(world, capacity);
 
         for (const Particle& particle : particles) {
@@ -415,7 +433,8 @@ std::string generateVisualizationFramesJson(
         }
 
         QueryStats queryStats {0, 0, 0};
-        vector<Particle> queryCandidates = qt.queryNearPoint(queryX, queryY, queryRadius, queryStats);
+        vector<Particle> queryCandidates;
+        qt.queryRange(queryArea, queryCandidates, queryStats);
         
         // QuadTree based collision detection
         vector<CollisionPair> collisions;
@@ -448,7 +467,9 @@ std::string generateVisualizationFramesJson(
 
         os << "    {\n";
         os << "      \"index\": " << frame << ",\n";
-        os << "      \"query\": { \"x\": " << queryX << ", \"y\": " << queryY << ", \"radius\": " << queryRadius << " },\n";
+        os << "      \"query\": { \"type\": \"rectangle\", \"x\": " << queryX << ", \"y\": " << queryY
+           << ", \"w\": " << queryWidth << ", \"h\": " << queryHeight
+           << ", \"radius\": " << queryRadius << " },\n";
         os << "      \"metrics\": { \"nodesVisited\": " << queryStats.nodesVisited
            << ", \"particlesChecked\": " << queryStats.particlesChecked
            << ", \"candidates\": " << queryCandidates.size()
@@ -541,7 +562,9 @@ void streamSimulationFrames(
     using namespace std;
     using namespace chrono;
 
-    double queryRadius = min(width, height) * 0.17;
+    double queryWidth = min(width, height) * 0.28;
+    double queryHeight = min(width, height) * 0.18;
+    double queryRadius = max(queryWidth, queryHeight) / 2;
     Rectangle world {width / 2, height / 2, width, height};
 
     vector<Particle> particles;
@@ -576,13 +599,14 @@ void streamSimulationFrames(
 
         double queryX = width  / 2 + (width  * 0.145) * sin(frame * 0.08);
         double queryY = height / 2 + (height * 0.110) * cos(frame * 0.06);
+        Rectangle queryArea {queryX, queryY, queryWidth, queryHeight};
 
         QuadTree qt(world, capacity);
         for (const Particle& p : particles) qt.insert(p);
 
         QueryStats queryStats {0, 0, 0};
-        vector<Particle> queryCandidates =
-            qt.queryNearPoint(queryX, queryY, queryRadius, queryStats);
+        vector<Particle> queryCandidates;
+        qt.queryRange(queryArea, queryCandidates, queryStats);
 
         // QuadTree-based collision detection
         vector<CollisionPair> collisions;
@@ -617,7 +641,8 @@ void streamSimulationFrames(
         ostringstream os;
         os << fixed << setprecision(3);
         os << "{\"type\":\"frame\",\"index\":" << frame;
-        os << ",\"query\":{\"x\":" << queryX << ",\"y\":" << queryY
+        os << ",\"query\":{\"type\":\"rectangle\",\"x\":" << queryX << ",\"y\":" << queryY
+           << ",\"w\":" << queryWidth << ",\"h\":" << queryHeight
            << ",\"radius\":" << queryRadius << "}";
         os << ",\"metrics\":{"
            << "\"nodesVisited\":"     << queryStats.nodesVisited
@@ -691,7 +716,9 @@ void streamSimulationLive(
     using namespace std;
     using namespace chrono;
 
-    double queryRadius = min(width, height) * 0.17;
+    double queryWidth = min(width, height) * 0.28;
+    double queryHeight = min(width, height) * 0.18;
+    double queryRadius = max(queryWidth, queryHeight) / 2;
     {
         ostringstream os;
         os << fixed << setprecision(3);
@@ -722,7 +749,9 @@ void streamSimulationLive(
             ostringstream os;
             os << fixed << setprecision(3);
             os << "{\"type\":\"frame\",\"index\":" << frame
-               << ",\"query\":{\"x\":" << width/2 << ",\"y\":" << height/2 << ",\"radius\":" << queryRadius << "}"
+               << ",\"query\":{\"type\":\"rectangle\",\"x\":" << width/2 << ",\"y\":" << height/2
+               << ",\"w\":" << queryWidth << ",\"h\":" << queryHeight
+               << ",\"radius\":" << queryRadius << "}"
                << ",\"metrics\":{\"nodesVisited\":0,\"particlesChecked\":0,\"candidates\":0,"
                << "\"collisions\":0,\"quadtreeNodes\":1,\"qtComparisons\":0,\"bfComparisons\":0,\"frameTimeMs\":0}"
                << ",\"particles\":[]"
@@ -738,13 +767,14 @@ void streamSimulationLive(
 
         double queryX = width  / 2 + (width  * 0.145) * sin(frame * 0.08);
         double queryY = height / 2 + (height * 0.110) * cos(frame * 0.06);
+        Rectangle queryArea {queryX, queryY, queryWidth, queryHeight};
 
         QuadTree qt(world, capacity);
         for (const Particle& p : particles) qt.insert(p);
 
         QueryStats queryStats {0, 0, 0};
-        vector<Particle> queryCandidates =
-            qt.queryNearPoint(queryX, queryY, queryRadius, queryStats);
+        vector<Particle> queryCandidates;
+        qt.queryRange(queryArea, queryCandidates, queryStats);
 
         vector<CollisionPair> collisions;
         long long qtComparisons = 0;
@@ -777,7 +807,9 @@ void streamSimulationLive(
         ostringstream os;
         os << fixed << setprecision(3);
         os << "{\"type\":\"frame\",\"index\":" << frame;
-        os << ",\"query\":{\"x\":" << queryX << ",\"y\":" << queryY << ",\"radius\":" << queryRadius << "}";
+        os << ",\"query\":{\"type\":\"rectangle\",\"x\":" << queryX << ",\"y\":" << queryY
+           << ",\"w\":" << queryWidth << ",\"h\":" << queryHeight
+           << ",\"radius\":" << queryRadius << "}";
         os << ",\"metrics\":{"
            << "\"nodesVisited\":"      << queryStats.nodesVisited
            << ",\"particlesChecked\":" << queryStats.particlesChecked

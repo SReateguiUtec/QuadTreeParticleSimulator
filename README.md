@@ -15,6 +15,7 @@ Utiliza una arquitectura híbrida donde el backend en **C++** calcula la física
 - **Streaming SSE (Server-Sent Events):** C++ calcula un frame y lo empuja al cliente web instantáneamente, permitiendo simulación infinita y continua (~30 FPS controlados por backend).
 - **Métricas en Vivo:** El dashboard compara en tiempo real las operaciones (comparaciones y tiempos) realizadas por el QuadTree vs la Fuerza Bruta.
 - **Múltiples Distribuciones Espaciales:** Uniforme, clusters, zona de alta densidad y galaxia para probar escenarios con diferente densidad.
+- **Datos de entrada configurables:** número de partículas, tamaño del espacio 2D, capacidad por nodo, radio, velocidad y distribución inicial.
 
 ---
 
@@ -49,8 +50,10 @@ Abre en tu navegador la URL que indique Vite (usualmente `http://localhost:5173`
 
 1. **Modo Interactivo (Click):** Con el modo click activado, toca en cualquier parte del canvas para insertar una nueva partícula. Verás el QuadTree subdividirse automáticamente para acomodarla.
 2. **Scrubber (Línea de tiempo):** La simulación mantiene un buffer de los últimos 300 frames. Puedes arrastrar el slider inferior para retroceder en el tiempo. Vuelve a hacer click en `▶ LIVE` para regresar al stream en vivo.
-3. **Distribuciones masivas:** Usa el panel superior para inyectar cientos de partículas a la vez en distribuciones uniformes, clusters, o alta densidad.
-4. **Vista de Organigrama:** Habilita este switch para observar un trazado ortogonal estático que representa la topología en forma de árbol (Raíz → Nodos → Partículas) del QuadTree en el frame actual.
+3. **Configuración:** Ajusta ancho/alto del espacio 2D, capacidad del nodo, radio y velocidad. Pulsa `Reiniciar Stream` para aplicar los cambios globales de la simulación.
+4. **Distribuciones masivas:** Usa el panel superior para inyectar cientos de partículas a la vez en distribuciones uniformes, clusters, o alta densidad.
+5. **Consulta rectangular:** El rectángulo resaltado en el canvas representa una consulta `queryRange`; las partículas naranjas son los candidatos retornados por el QuadTree.
+6. **Vista de Organigrama:** Habilita este switch para observar un trazado ortogonal estático que representa la topología en forma de árbol (Raíz → Nodos → Partículas) del QuadTree en el frame actual.
 
 ---
 
@@ -71,7 +74,7 @@ Cada partícula tiene posición, velocidad y radio. Dos partículas colisionan s
 El QuadTree divide recursivamente el espacio 2D en cuatro regiones (Noreste, Noroeste, Sureste, Suroeste).
 Cada nodo almacena partículas. Si se supera la `capacidad máxima`, el nodo se subdivide y las partículas se redistribuyen en los hijos. Se reconstruye o limpia el árbol por completo en cada frame de la simulación.
 
-La consulta (`queryRange`) evita revisar regiones que no intersectan con el área consultada, lo que filtra drásticamente las partículas candidatas a colisionar frente a una búsqueda lineal.
+La consulta rectangular (`queryRange`) evita revisar regiones que no intersectan con el area consultada, lo que filtra drasticamente las particulas candidatas frente a una busqueda lineal. La consulta circular (`queryNearPoint`) se mantiene para vecinos cercanos y deteccion de colisiones.
 
 ### Operaciones, Invariantes y Complejidad
 Para garantizar el correcto funcionamiento del QuadTree, se mantienen los siguientes **invariantes**:
