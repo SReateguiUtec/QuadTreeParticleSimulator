@@ -1,4 +1,5 @@
 #include "Experiment.h"
+
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -18,7 +19,13 @@ static double clampPosition(double value, double minValue, double maxValue) {
     return max(minValue, min(value, maxValue));
 }
 
-static Particle makeParticle(int id, double x, double y, double radius, mt19937& generator) {
+static Particle makeParticle(
+    int id,
+    double x,
+    double y,
+    double radius,
+    mt19937& generator
+) {
     return {
         id,
         x,
@@ -90,8 +97,16 @@ static vector<Particle> generateClusterParticles(
 
     for (int i = 0; i < n; i++) {
         const auto& center = centers[clusterDistribution(generator)];
-        double x = clampPosition(center.first + offsetDistribution(generator), radius, width - radius);
-        double y = clampPosition(center.second + offsetDistribution(generator), radius, height - radius);
+        double x = clampPosition(
+            center.first + offsetDistribution(generator),
+            radius,
+            width - radius
+        );
+        double y = clampPosition(
+            center.second + offsetDistribution(generator),
+            radius,
+            height - radius
+        );
 
         particles.push_back(makeParticle(i + 1, x, y, radius, generator));
     }
@@ -273,7 +288,13 @@ ExperimentResult runExperiment(
     };
 }
 
-void printExperimentHeader(double width, double height, double radius, int capacity, int frames) {
+void printExperimentHeader(
+    double width,
+    double height,
+    double radius,
+    int capacity,
+    int frames
+) {
     cout << "Experimentos QuadTree vs fuerza bruta" << endl;
     cout << "Mundo: " << width << " x " << height
          << ", radio: " << radius
@@ -321,7 +342,10 @@ void printResult(const ExperimentResult& result) {
          << endl;
 }
 
-void writeResultsCsv(const string& fileName, const vector<ExperimentResult>& results) {
+void writeResultsCsv(
+    const string& fileName,
+    const vector<ExperimentResult>& results
+) {
     ofstream file(fileName);
 
     file << "distribucion,particulas,frames,construccion_quadtree_us,"

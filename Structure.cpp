@@ -1,7 +1,9 @@
 #include "Structure.h"
+
 #include <cmath>
 #include <iostream>
 #include <sstream>
+
 using namespace std;
 
 static double maxParticleRadius(const vector<Particle> &particles) {
@@ -182,9 +184,13 @@ QuadTree::QuadTree(Rectangle boundary, int capacity) {
   this->root = new QuadNode(boundary);
 }
 
-QuadTree::~QuadTree() { delete root; }
+QuadTree::~QuadTree() {
+  delete root;
+}
 
-bool QuadTree::insert(const Particle &p) { return root->insert(p, capacity); }
+bool QuadTree::insert(const Particle &p) {
+  return root->insert(p, capacity);
+}
 
 void QuadTree::queryRange(const Rectangle &range,
                           vector<Particle> &found) const {
@@ -227,9 +233,13 @@ void QuadTree::collectBoundaries(vector<Rectangle> &boundaries) const {
   root->collectBoundaries(boundaries);
 }
 
-void QuadTree::clear() { root->clear(); }
+void QuadTree::clear() {
+  root->clear();
+}
 
-void QuadTree::serialize(std::ostringstream &os) const { root->serialize(os); }
+void QuadTree::serialize(std::ostringstream &os) const {
+  root->serialize(os);
+}
 
 //////////////////////////////
 // Funcion minima: actualizar posiciones de objetos frame por frame.

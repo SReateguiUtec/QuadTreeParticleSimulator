@@ -1,12 +1,17 @@
 #include "Visualization.h"
+
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <random>
 #include <set>
+#include <sstream>
+#include <thread>
 #include <vector>
+
 #include "Experiment.h"
 #include "Structure.h"
 
@@ -381,9 +386,6 @@ void generateVisualizationFrames(
     cout << "Datos para front generados en: " << fileName << endl;
 }
 
-#include <sstream>
-#include <chrono>
-
 std::string generateVisualizationFramesJson(
     double width,
     double height,
@@ -398,11 +400,18 @@ std::string generateVisualizationFramesJson(
     double queryRadius = std::max(queryWidth, queryHeight) / 2;
     Rectangle world {width / 2, height / 2, width, height};
     vector<Particle> particles;
-    
+
     if (distributionType == 3) {
         particles = generateGalaxyParticles(particleCount, width, height, radius);
     } else {
-        particles = generateParticles(static_cast<DistributionType>(distributionType), particleCount, width, height, radius, 2026);
+        particles = generateParticles(
+            static_cast<DistributionType>(distributionType),
+            particleCount,
+            width,
+            height,
+            radius,
+            2026
+        );
     }
 
     std::ostringstream os;
@@ -420,7 +429,7 @@ std::string generateVisualizationFramesJson(
 
     for (int frame = 0; frame < totalFrames; frame++) {
         auto tStart = chrono::high_resolution_clock::now();
-        
+
         updateParticles(particles, width, height);
 
         double queryX = width / 2 + (width * 0.145) * sin(frame * 0.08);
@@ -435,14 +444,17 @@ std::string generateVisualizationFramesJson(
         QueryStats queryStats {0, 0, 0};
         vector<Particle> queryCandidates;
         qt.queryRange(queryArea, queryCandidates, queryStats);
-        
+
         // QuadTree based collision detection
         vector<CollisionPair> collisions;
         long long qtComparisons = 0;
+
         for (const Particle& p : particles) {
             QueryStats cs {0, 0, 0};
             vector<Particle> neighbors = qt.queryNearPoint(p.x, p.y, radius * 2.01, cs);
+
             qtComparisons += cs.particlesChecked;
+
             for (const Particle& neighbor : neighbors) {
                 if (neighbor.id > p.id && areColliding(p, neighbor)) {
                     collisions.push_back({p, neighbor});
@@ -451,13 +463,13 @@ std::string generateVisualizationFramesJson(
         }
         
         long long bfComparisons = (long long)particles.size() * (particles.size() - 1) / 2;
-        
+
         auto tEnd = chrono::high_resolution_clock::now();
         double frameTimeMs = chrono::duration<double, milli>(tEnd - tStart).count();
 
         vector<Rectangle> boundaries;
         qt.collectBoundaries(boundaries);
-        
+
         set<int> candidateIds;
         set<int> collidingIds = collectCollidingIds(collisions);
 
@@ -547,9 +559,7 @@ std::string generateVisualizationFramesJson(
     return os.str();
 }
 
-// ─── SSE streaming: one frame per callback call, infinite loop ────────────
-#include <thread>
-
+// SSE streaming: one frame per callback call, infinite loop.
 void streamSimulationFrames(
     double width,
     double height,
@@ -581,14 +591,17 @@ void streamSimulationFrames(
         ostringstream os;
         os << fixed << setprecision(3);
         os << "{\"type\":\"init\""
-           << ",\"width\":"          << width
-           << ",\"height\":"         << height
+           << ",\"width\":" << width
+           << ",\"height\":" << height
            << ",\"particleRadius\":" << radius
-           << ",\"particleCount\":"  << particleCount
-           << ",\"capacity\":"       << capacity
-           << ",\"queryRadius\":"    << queryRadius
+           << ",\"particleCount\":" << particleCount
+           << ",\"capacity\":" << capacity
+           << ",\"queryRadius\":" << queryRadius
            << "}";
-        if (!onFrame(os.str())) return;
+
+        if (!onFrame(os.str())) {
+            return;
+        }
     }
 
     int frame = 0;
@@ -597,12 +610,15 @@ void streamSimulationFrames(
 
         updateParticles(particles, width, height);
 
-        double queryX = width  / 2 + (width  * 0.145) * sin(frame * 0.08);
+        double queryX = width / 2 + (width * 0.145) * sin(frame * 0.08);
         double queryY = height / 2 + (height * 0.110) * cos(frame * 0.06);
         Rectangle queryArea {queryX, queryY, queryWidth, queryHeight};
 
         QuadTree qt(world, capacity);
-        for (const Particle& p : particles) qt.insert(p);
+
+        for (const Particle& p : particles) {
+            qt.insert(p);
+        }
 
         QueryStats queryStats {0, 0, 0};
         vector<Particle> queryCandidates;
@@ -611,13 +627,17 @@ void streamSimulationFrames(
         // QuadTree-based collision detection
         vector<CollisionPair> collisions;
         long long qtComparisons = 0;
+
         for (const Particle& p : particles) {
             QueryStats cs {0, 0, 0};
             vector<Particle> neighbors = qt.queryNearPoint(p.x, p.y, radius * 2.01, cs);
+
             qtComparisons += cs.particlesChecked;
+
             for (const Particle& nb : neighbors) {
-                if (nb.id > p.id && areColliding(p, nb))
+                if (nb.id > p.id && areColliding(p, nb)) {
                     collisions.push_back({p, nb});
+                }
             }
         }
 
@@ -631,13 +651,17 @@ void streamSimulationFrames(
         qt.collectBoundaries(boundaries);
 
         set<int> candidateIds, collidingIds;
-        for (auto& p : queryCandidates) candidateIds.insert(p.id);
+
+        for (auto& p : queryCandidates) {
+            candidateIds.insert(p.id);
+        }
+
         for (auto& c : collisions) {
             collidingIds.insert(c.first.id);
             collidingIds.insert(c.second.id);
         }
 
-        // ── Serialize ────────────────────────────────────────────────
+        // Serialize.
         ostringstream os;
         os << fixed << setprecision(3);
         os << "{\"type\":\"frame\",\"index\":" << frame;
@@ -645,27 +669,31 @@ void streamSimulationFrames(
            << ",\"w\":" << queryWidth << ",\"h\":" << queryHeight
            << ",\"radius\":" << queryRadius << "}";
         os << ",\"metrics\":{"
-           << "\"nodesVisited\":"     << queryStats.nodesVisited
+           << "\"nodesVisited\":" << queryStats.nodesVisited
            << ",\"particlesChecked\":" << queryStats.particlesChecked
-           << ",\"candidates\":"      << queryCandidates.size()
-           << ",\"collisions\":"      << collisions.size()
-           << ",\"quadtreeNodes\":"   << boundaries.size()
-           << ",\"qtComparisons\":"   << qtComparisons
-           << ",\"bfComparisons\":"   << bfComparisons
-           << ",\"frameTimeMs\":"     << frameTimeMs
+           << ",\"candidates\":" << queryCandidates.size()
+           << ",\"collisions\":" << collisions.size()
+           << ",\"quadtreeNodes\":" << boundaries.size()
+           << ",\"qtComparisons\":" << qtComparisons
+           << ",\"bfComparisons\":" << bfComparisons
+           << ",\"frameTimeMs\":" << frameTimeMs
            << "}";
 
         // particles
         os << ",\"particles\":[";
         for (size_t i = 0; i < particles.size(); i++) {
-            if (i) os << ",";
+            if (i) {
+                os << ",";
+            }
+
             const Particle& p = particles[i];
+
             os << "{\"id\":" << p.id
-               << ",\"x\":"  << p.x
-               << ",\"y\":"  << p.y
-               << ",\"r\":"  << p.radius
-               << ",\"candidate\":"  << (candidateIds.count(p.id)  ? "true" : "false")
-               << ",\"colliding\":"  << (collidingIds.count(p.id)  ? "true" : "false")
+               << ",\"x\":" << p.x
+               << ",\"y\":" << p.y
+               << ",\"r\":" << p.radius
+               << ",\"candidate\":" << (candidateIds.count(p.id) ? "true" : "false")
+               << ",\"colliding\":" << (collidingIds.count(p.id) ? "true" : "false")
                << "}";
         }
         os << "]";
@@ -673,10 +701,14 @@ void streamSimulationFrames(
         // boundaries
         os << ",\"boundaries\":[";
         for (size_t i = 0; i < boundaries.size(); i++) {
-            if (i) os << ",";
+            if (i) {
+                os << ",";
+            }
+
             const Rectangle& b = boundaries[i];
-            os << "{\"x\":" << (b.x - b.w/2)
-               << ",\"y\":" << (b.y - b.h/2)
+
+            os << "{\"x\":" << (b.x - b.w / 2)
+               << ",\"y\":" << (b.y - b.h / 2)
                << ",\"w\":" << b.w
                << ",\"h\":" << b.h << "}";
         }
@@ -685,7 +717,10 @@ void streamSimulationFrames(
         // collisions
         os << ",\"collisions\":[";
         for (size_t i = 0; i < collisions.size(); i++) {
-            if (i) os << ",";
+            if (i) {
+                os << ",";
+            }
+
             os << "{\"a\":" << collisions[i].first.id
                << ",\"b\":" << collisions[i].second.id << "}";
         }
@@ -697,7 +732,10 @@ void streamSimulationFrames(
 
         os << "}";
 
-        if (!onFrame(os.str())) break;
+        if (!onFrame(os.str())) {
+            break;
+        }
+
         frame++;
         this_thread::sleep_for(milliseconds(33));
     }
@@ -723,13 +761,16 @@ void streamSimulationLive(
         ostringstream os;
         os << fixed << setprecision(3);
         os << "{\"type\":\"init\""
-           << ",\"width\":"          << width
-           << ",\"height\":"         << height
+           << ",\"width\":" << width
+           << ",\"height\":" << height
            << ",\"particleRadius\":" << radius
-           << ",\"capacity\":"       << capacity
-           << ",\"queryRadius\":"    << queryRadius
+           << ",\"capacity\":" << capacity
+           << ",\"queryRadius\":" << queryRadius
            << "}";
-        if (!onFrame(os.str())) return;
+
+        if (!onFrame(os.str())) {
+            return;
+        }
     }
 
     Rectangle world {width / 2, height / 2, width, height};
@@ -749,7 +790,8 @@ void streamSimulationLive(
             ostringstream os;
             os << fixed << setprecision(3);
             os << "{\"type\":\"frame\",\"index\":" << frame
-               << ",\"query\":{\"type\":\"rectangle\",\"x\":" << width/2 << ",\"y\":" << height/2
+               << ",\"query\":{\"type\":\"rectangle\",\"x\":" << width / 2
+               << ",\"y\":" << height / 2
                << ",\"w\":" << queryWidth << ",\"h\":" << queryHeight
                << ",\"radius\":" << queryRadius << "}"
                << ",\"metrics\":{\"nodesVisited\":0,\"particlesChecked\":0,\"candidates\":0,"
@@ -759,18 +801,25 @@ void streamSimulationLive(
                << ",\"collisions\":[]"
                << ",\"tree\":{\"divided\":false,\"particles\":0}"
                << "}";
-            if (!onFrame(os.str())) break;
+
+            if (!onFrame(os.str())) {
+                break;
+            }
+
             frame++;
             this_thread::sleep_for(milliseconds(80));
             continue;
         }
 
-        double queryX = width  / 2 + (width  * 0.145) * sin(frame * 0.08);
+        double queryX = width / 2 + (width * 0.145) * sin(frame * 0.08);
         double queryY = height / 2 + (height * 0.110) * cos(frame * 0.06);
         Rectangle queryArea {queryX, queryY, queryWidth, queryHeight};
 
         QuadTree qt(world, capacity);
-        for (const Particle& p : particles) qt.insert(p);
+
+        for (const Particle& p : particles) {
+            qt.insert(p);
+        }
 
         QueryStats queryStats {0, 0, 0};
         vector<Particle> queryCandidates;
@@ -778,13 +827,17 @@ void streamSimulationLive(
 
         vector<CollisionPair> collisions;
         long long qtComparisons = 0;
+
         for (const Particle& p : particles) {
             QueryStats cs {0, 0, 0};
             vector<Particle> neighbors = qt.queryNearPoint(p.x, p.y, radius * 2.01, cs);
+
             qtComparisons += cs.particlesChecked;
+
             for (const Particle& nb : neighbors) {
-                if (nb.id > p.id && areColliding(p, nb))
+                if (nb.id > p.id && areColliding(p, nb)) {
                     collisions.push_back({p, nb});
+                }
             }
         }
 
@@ -798,7 +851,11 @@ void streamSimulationLive(
         qt.collectBoundaries(boundaries);
 
         set<int> candidateIds, collidingIds;
-        for (auto& p : queryCandidates) candidateIds.insert(p.id);
+
+        for (auto& p : queryCandidates) {
+            candidateIds.insert(p.id);
+        }
+
         for (auto& c : collisions) {
             collidingIds.insert(c.first.id);
             collidingIds.insert(c.second.id);
@@ -811,41 +868,56 @@ void streamSimulationLive(
            << ",\"w\":" << queryWidth << ",\"h\":" << queryHeight
            << ",\"radius\":" << queryRadius << "}";
         os << ",\"metrics\":{"
-           << "\"nodesVisited\":"      << queryStats.nodesVisited
+           << "\"nodesVisited\":" << queryStats.nodesVisited
            << ",\"particlesChecked\":" << queryStats.particlesChecked
-           << ",\"candidates\":"       << queryCandidates.size()
-           << ",\"collisions\":"       << collisions.size()
-           << ",\"quadtreeNodes\":"    << boundaries.size()
-           << ",\"qtComparisons\":"    << qtComparisons
-           << ",\"bfComparisons\":"    << bfComparisons
-           << ",\"frameTimeMs\":"      << frameTimeMs
+           << ",\"candidates\":" << queryCandidates.size()
+           << ",\"collisions\":" << collisions.size()
+           << ",\"quadtreeNodes\":" << boundaries.size()
+           << ",\"qtComparisons\":" << qtComparisons
+           << ",\"bfComparisons\":" << bfComparisons
+           << ",\"frameTimeMs\":" << frameTimeMs
            << "}";
 
         os << ",\"particles\":[";
         for (size_t i = 0; i < particles.size(); i++) {
-            if (i) os << ",";
+            if (i) {
+                os << ",";
+            }
+
             const Particle& p = particles[i];
+
             os << "{\"id\":" << p.id
-               << ",\"x\":"  << p.x << ",\"y\":" << p.y << ",\"r\":" << p.radius
-               << ",\"candidate\":"  << (candidateIds.count(p.id)  ? "true" : "false")
-               << ",\"colliding\":"  << (collidingIds.count(p.id)  ? "true" : "false")
+               << ",\"x\":" << p.x
+               << ",\"y\":" << p.y
+               << ",\"r\":" << p.radius
+               << ",\"candidate\":" << (candidateIds.count(p.id) ? "true" : "false")
+               << ",\"colliding\":" << (collidingIds.count(p.id) ? "true" : "false")
                << "}";
         }
         os << "]";
 
         os << ",\"boundaries\":[";
         for (size_t i = 0; i < boundaries.size(); i++) {
-            if (i) os << ",";
+            if (i) {
+                os << ",";
+            }
+
             const Rectangle& b = boundaries[i];
-            os << "{\"x\":" << (b.x-b.w/2) << ",\"y\":" << (b.y-b.h/2)
+
+            os << "{\"x\":" << (b.x - b.w / 2)
+               << ",\"y\":" << (b.y - b.h / 2)
                << ",\"w\":" << b.w << ",\"h\":" << b.h << "}";
         }
         os << "]";
 
         os << ",\"collisions\":[";
         for (size_t i = 0; i < collisions.size(); i++) {
-            if (i) os << ",";
-            os << "{\"a\":" << collisions[i].first.id << ",\"b\":" << collisions[i].second.id << "}";
+            if (i) {
+                os << ",";
+            }
+
+            os << "{\"a\":" << collisions[i].first.id
+               << ",\"b\":" << collisions[i].second.id << "}";
         }
         os << "]";
 
@@ -853,7 +925,10 @@ void streamSimulationLive(
         qt.serialize(os);
         os << "}";
 
-        if (!onFrame(os.str())) break;
+        if (!onFrame(os.str())) {
+            break;
+        }
+
         frame++;
         this_thread::sleep_for(milliseconds(33));
     }
