@@ -8,7 +8,7 @@ Utiliza una arquitectura híbrida donde el backend en **C++** calcula la física
 
 ---
 
-## ✨ Características Principales
+## Características Principales
 
 - **Motor Físico en C++:** Implementación desde cero de un QuadTree para detección de vecinos O(log N) frente a O(N²) de fuerza bruta.
 - **Simulación Interactiva en Tiempo Real:** Las partículas se pueden insertar haciendo click directamente en el canvas web.
@@ -18,7 +18,7 @@ Utiliza una arquitectura híbrida donde el backend en **C++** calcula la física
 
 ---
 
-## 🚀 Cómo ejecutar el proyecto
+## Cómo ejecutar el proyecto
 
 ### 1. Compilar y correr el servidor C++
 El motor en C++ utiliza la librería `httplib` para montar el servidor web y abrir el stream SSE.
@@ -54,7 +54,7 @@ Abre en tu navegador la URL que indique Vite (usualmente `http://localhost:5173`
 
 ---
 
-## 🏗️ Implementación y Algoritmos
+## Implementación y Algoritmos
 
 ### Modelo de partícula
 ```cpp
@@ -97,7 +97,7 @@ Ambos métodos encuentran **exactamente las mismas colisiones**, pero el QuadTre
 
 ---
 
-## 🧪 Experimentos y Distribuciones
+## Experimentos y Distribuciones
 
 Se implementaron distintas distribuciones para poner a prueba el balanceo del QuadTree:
 1. **Uniforme:** Partículas esparcidas aleatoriamente por todo el espacio.
@@ -110,7 +110,7 @@ El QuadTree brilla en distribuciones uniformes donde la poda espacial es máxima
 
 ---
 
-## 📁 Estructura de archivos
+## Estructura de archivos
 
 ```text
 .

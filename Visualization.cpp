@@ -672,15 +672,13 @@ void streamSimulationFrames(
 
         os << "}";
 
-        if (!onFrame(os.str())) break;   // client disconnected
+        if (!onFrame(os.str())) break;
         frame++;
-
-        // ~30 fps cap on the server side (leaves CPU headroom)
         this_thread::sleep_for(milliseconds(33));
     }
 }
 
-// ─── LIVE interactive streaming: uses a shared particle vector with mutex ───
+// LIVE
 void streamSimulationLive(
     std::mutex& mtx,
     std::vector<Particle>& sharedParticles,
@@ -694,8 +692,6 @@ void streamSimulationLive(
     using namespace chrono;
 
     double queryRadius = min(width, height) * 0.17;
-
-    // Send init message
     {
         ostringstream os;
         os << fixed << setprecision(3);
@@ -715,7 +711,6 @@ void streamSimulationLive(
     while (true) {
         auto tStart = high_resolution_clock::now();
 
-        // Lock, update positions, copy out
         vector<Particle> particles;
         {
             lock_guard<mutex> lk(mtx);
@@ -724,7 +719,6 @@ void streamSimulationLive(
         }
 
         if (particles.empty()) {
-            // Send empty frame so the canvas renders a blank QuadTree
             ostringstream os;
             os << fixed << setprecision(3);
             os << "{\"type\":\"frame\",\"index\":" << frame
@@ -742,7 +736,6 @@ void streamSimulationLive(
             continue;
         }
 
-        // Animate query circle
         double queryX = width  / 2 + (width  * 0.145) * sin(frame * 0.08);
         double queryY = height / 2 + (height * 0.110) * cos(frame * 0.06);
 
@@ -753,7 +746,6 @@ void streamSimulationLive(
         vector<Particle> queryCandidates =
             qt.queryNearPoint(queryX, queryY, queryRadius, queryStats);
 
-        // QuadTree collision detection
         vector<CollisionPair> collisions;
         long long qtComparisons = 0;
         for (const Particle& p : particles) {

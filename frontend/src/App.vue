@@ -3,6 +3,7 @@ import { ref, onMounted, computed, onUnmounted, nextTick } from 'vue';
 import QuadCanvas from './components/QuadCanvas.vue';
 import MetricsCard from './components/MetricsCard.vue';
 import TreeGraphOverlay from './components/TreeGraphOverlay.vue';
+import ExperimentPanel from './components/ExperimentPanel.vue';
 
 const BASE = 'http://localhost:8080';
 
@@ -15,6 +16,7 @@ const isLive       = ref(true);
 const isLoading    = ref(false);
 const isStreaming  = ref(false);
 const showTree     = ref(false);
+const activeTab    = ref('simulator'); // 'simulator' | 'experiments'
 const spaceMode    = ref(false);
 const frameCount   = ref(0);
 const particleCount = ref(0);
@@ -192,6 +194,25 @@ const speedup = computed(() =>
         </p>
       </div>
 
+      <!-- Tab switcher -->
+      <div class="flex items-center gap-1 rounded-xl p-1"
+           style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);">
+        <button @click="activeTab = 'simulator'"
+                class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+                :style="activeTab === 'simulator'
+                  ? 'background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;box-shadow:0 0 12px rgba(14,165,233,0.3)'
+                  : 'background:transparent;color:#64748b'">
+          Simulador
+        </button>
+        <button @click="activeTab = 'experiments'"
+                class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+                :style="activeTab === 'experiments'
+                  ? 'background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 0 12px rgba(99,102,241,0.3)'
+                  : 'background:transparent;color:#64748b'">
+          Experimentos
+        </button>
+      </div>
+
       <!-- Stream controls -->
       <div class="flex items-center gap-2 px-4 py-2 rounded-2xl flex-wrap"
            style="background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);">
@@ -246,8 +267,13 @@ const speedup = computed(() =>
       </div>
     </header>
 
+    <!-- ── EXPERIMENTS TAB ────────────────────────────────────────────── -->
+    <div v-if="activeTab === 'experiments'" class="w-full max-w-[1400px] mx-auto">
+      <ExperimentPanel />
+    </div>
+
     <!-- ── BODY ──────────────────────────────────────────────────────── -->
-    <div class="w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-5">
+    <div v-if="activeTab === 'simulator'" class="w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-5">
 
       <!-- Canvas col -->
       <main class="flex-1 flex flex-col gap-4 min-w-0">

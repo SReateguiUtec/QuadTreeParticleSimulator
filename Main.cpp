@@ -8,10 +8,8 @@
 #include "Structure.h"
 #include "Experiment.h"
 #include "Visualization.h"
-
 using namespace std;
 
-// ── Global simulation state (shared across all requests) ───────────────────
 struct SimState {
     mutex              mtx;
     vector<Particle>   particles;
@@ -22,7 +20,7 @@ struct SimState {
     int                nextId   = 0;
 } sim;
 
-// ── Tiny JSON helpers ──────────────────────────────────────────────────────
+
 static double jsonDouble(const string& body, const string& key, double def = 0.0) {
     auto pos = body.find('"' + key + '"');
     if (pos == string::npos) return def;
@@ -34,7 +32,7 @@ static int jsonInt(const string& body, const string& key, int def = 0) {
     return (int)jsonDouble(body, key, (double)def);
 }
 
-// ── CORS helper ────────────────────────────────────────────────────────────
+// CORS helper
 static void cors(httplib::Response& res) {
     res.set_header("Access-Control-Allow-Origin",  "*");
     res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
@@ -43,17 +41,16 @@ static void cors(httplib::Response& res) {
 
 int main() {
     httplib::Server svr;
-    svr.set_read_timeout(3600);  // keep SSE alive up to 1h
+    svr.set_read_timeout(3600);
 
-    // ── OPTIONS (CORS pre-flight) ─────────────────────────────────────────
+    // ── OPTIONS (CORS)
     svr.Options(".*", [](const httplib::Request&, httplib::Response& res) {
         cors(res);
         res.status = 204;
     });
 
-    // ── GET /simulate/stream  (SSE live interactive stream) ────────────────
+    // ── GET /simulate/stream
     svr.Get("/simulate/stream", [](const httplib::Request& req, httplib::Response& res) {
-        // Optional: reconfigure sim from query params
         {
             lock_guard<mutex> lk(sim.mtx);
             if (req.has_param("w"))   sim.width    = stod(req.get_param_value("w"));
@@ -92,20 +89,18 @@ int main() {
         );
     });
 
-    // ── POST /particle  (add one particle at click position) ──────────────
+    // ── POST /particle
     svr.Post("/particle", [](const httplib::Request& req, httplib::Response& res) {
         double x   = jsonDouble(req.body, "x");
         double y   = jsonDouble(req.body, "y");
-        double spd = jsonDouble(req.body, "speed", 1.5);  // optional speed
+        double spd = jsonDouble(req.body, "speed", 1.5);
 
         lock_guard<mutex> lk(sim.mtx);
 
-        // Clamp to world
         x = max(sim.radius, min(sim.width  - sim.radius, x));
         y = max(sim.radius, min(sim.height - sim.radius, y));
 
-        // Random velocity direction
-        double angle = (sim.nextId * 137.508) * M_PI / 180.0; // golden angle spread
+        double angle = (sim.nextId * 137.508) * M_PI / 180.0;
         Particle p;
         p.id     = sim.nextId++;
         p.x      = x;
@@ -123,7 +118,7 @@ int main() {
         cout << "[particle] added id=" << p.id << " at (" << x << "," << y << ")  total=" << sim.particles.size() << "\n";
     });
 
-    // ── DELETE /particles  (clear all) ────────────────────────────────────
+    // DELETE /particles
     svr.Delete("/particles", [](const httplib::Request&, httplib::Response& res) {
         lock_guard<mutex> lk(sim.mtx);
         sim.particles.clear();
@@ -133,7 +128,7 @@ int main() {
         cout << "[particles] cleared\n";
     });
 
-    // ── POST /particles/generate  (bulk generate) ─────────────────────────
+    // POST /particles/generate
     svr.Post("/particles/generate", [](const httplib::Request& req, httplib::Response& res) {
         int    n    = jsonInt   (req.body, "n",    200);
         int    dist = jsonInt   (req.body, "dist",   0);
@@ -144,7 +139,6 @@ int main() {
         }
 
         vector<Particle> generated;
-        // Use DistributionType — galaxy (3) maps to Clusters for bulk generation
         DistributionType dtype = (dist >= 0 && dist <= 2)
             ? static_cast<DistributionType>(dist)
             : DistributionType::Uniform;
@@ -166,7 +160,63 @@ int main() {
         cout << "[generate] dist=" << dist << " n=" << generated.size() << "\n";
     });
 
-    // ── GET /simulate (legacy batch, kept for compat) ──────────────────────
+    // GET /experiment
+    svr.Get("/experiment", [](const httplib::Request& req, httplib::Response& res) {
+        double w   = req.has_param("w")   ? stod(req.get_param_value("w"))   : 1000;
+        double h   = req.has_param("h")   ? stod(req.get_param_value("h"))   : 1000;
+        double r   = req.has_param("r")   ? stod(req.get_param_value("r"))   : 4.0;
+        int    cap = req.has_param("cap") ? stoi(req.get_param_value("cap")) : 4;
+        int frames = req.has_param("frames") ? stoi(req.get_param_value("frames")) : 30;
+
+        vector<int> sizes = {1000, 5000, 10000};
+        vector<DistributionType> dists = {
+            DistributionType::Uniform,
+            DistributionType::Clusters,
+            DistributionType::HighDensity
+        };
+
+        cors(res);
+        res.set_header("Cache-Control", "no-cache");
+
+        string json = "[";
+        bool first = true;
+        for (int n : sizes) {
+            for (auto dist : dists) {
+                cout << "[experiment] running n=" << n << " dist=" << distributionName(dist) << "\n";
+                ExperimentResult er = runExperiment(dist, n, frames, w, h, r, cap);
+
+                if (!first) json += ",";
+                first = false;
+
+                double speedup = er.averageBruteForceTimeUs > 0
+                    ? er.averageBruteForceTimeUs / max(er.averageQuadTreeTimeUs, 1.0)
+                    : 0.0;
+
+                json += "{";
+                json += "\"distribution\":\"" + er.distributionName + "\",";
+                json += "\"n\":" + to_string(er.particleCount) + ",";
+                json += "\"frames\":" + to_string(er.frames) + ",";
+                json += "\"buildTimeUs\":" + to_string((long long)er.averageBuildTimeUs) + ",";
+                json += "\"qtTimeUs\":" + to_string((long long)er.averageQuadTreeTimeUs) + ",";
+                json += "\"bfTimeUs\":" + to_string((long long)er.averageBruteForceTimeUs) + ",";
+                json += "\"qtComparisons\":" + to_string((long long)er.averageQuadTreeComparisons) + ",";
+                json += "\"bfComparisons\":" + to_string((long long)er.averageBruteForceComparisons) + ",";
+                json += "\"nodesVisited\":" + to_string((long long)er.averageQuadTreeNodesVisited) + ",";
+                json += "\"particlesChecked\":" + to_string((long long)er.averageQuadTreeParticlesChecked) + ",";
+                json += "\"candidatesFound\":" + to_string((long long)er.averageQuadTreeCandidatesFound) + ",";
+                json += "\"collisions\":" + to_string((long long)er.averageCollisions) + ",";
+                json += "\"candidatesPerParticle\":" + to_string(er.averageCandidatesPerParticle) + ",";
+                json += "\"speedup\":" + to_string(speedup);
+                json += "}";
+            }
+        }
+        json += "]";
+
+        res.set_content(json, "application/json");
+        cout << "[experiment] done\n";
+    });
+
+    // GET /simulate
     svr.Get("/simulate", [](const httplib::Request& req, httplib::Response& res) {
         double w  = req.has_param("w")   ? stod(req.get_param_value("w"))   : 1000;
         double h  = req.has_param("h")   ? stod(req.get_param_value("h"))   : 1000;
@@ -180,7 +230,7 @@ int main() {
     });
 
     cout << "==========================================\n";
-    cout << "🚀 QuadTree Backend — Interactive Mode    \n";
+    cout << " QuadTree Backend \n";
     cout << "👉 http://localhost:8080                   \n";
     cout << "   GET  /simulate/stream     → SSE live   \n";
     cout << "   POST /particle            → add 1 pt   \n";
