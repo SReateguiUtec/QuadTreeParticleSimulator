@@ -13,9 +13,9 @@ Utiliza una arquitectura híbrida donde el backend en **C++** calcula la física
 - **Múltiples Distribuciones Espaciales:** Uniforme, clusters, zona de alta densidad y galaxia para probar escenarios con diferente densidad.
 - **Datos de entrada configurables:** número de partículas, tamaño del espacio 2D, capacidad por nodo, radio, velocidad y distribución inicial.
 
-## Cómo ejecutar el proyecto
+## 🚀 Cómo ejecutar el proyecto
 
-### 1. Compilar y correr el servidor C++
+### 1. ⚙️ Compilar y correr el servidor C++
 El motor en C++ utiliza la librería `httplib` para montar el servidor web y abrir el stream SSE.
 
 ```bash
@@ -27,7 +27,7 @@ g++ -std=c++20 Main.cpp Structure.cpp Visualization.cpp Experiment.cpp -o server
 ```
 *(Nota: En CLion u otros IDEs también puedes ejecutarlo directamente usando el `CMakeLists.txt` incluido).*
 
-### 2. Iniciar el Frontend (Vue.js)
+### 2. 🌐 Iniciar el Frontend (Vue.js)
 Asegúrate de tener Node.js instalado. En otra terminal, entra a la carpeta del frontend y levanta el servidor de desarrollo Vite.
 
 ```bash
@@ -47,9 +47,9 @@ Abre en tu navegador la URL que indique Vite (usualmente `http://localhost:5173`
 5. **Consulta rectangular:** El rectángulo resaltado en el canvas representa una consulta `queryRange`; las partículas naranjas son los candidatos retornados por el QuadTree.
 6. **Vista de Organigrama:** Habilita este switch para observar un trazado ortogonal estático que representa la topología en forma de árbol (Raíz → Nodos → Partículas) del QuadTree en el frame actual.
 
-## Implementación y Algoritmos
+## 🧠 Implementación y Algoritmos
 
-### Modelo de partícula
+### 🔴 Modelo de partícula
 ```cpp
 struct Particle {
     int id;
@@ -60,13 +60,13 @@ struct Particle {
 ```
 Cada partícula tiene posición, velocidad y radio. Dos partículas colisionan si la distancia euclidiana entre sus centros es menor o igual a la suma de sus radios. En cada frame, se actualiza la posición y rebotan contra los bordes del mundo.
 
-### Cómo funciona el QuadTree
+### 🌳 Cómo funciona el QuadTree
 El QuadTree divide recursivamente el espacio 2D en cuatro regiones (Noreste, Noroeste, Sureste, Suroeste).
 Cada nodo almacena partículas. Si se supera la `capacidad máxima`, el nodo se subdivide y las partículas se redistribuyen en los hijos. Se reconstruye o limpia el árbol por completo en cada frame de la simulación.
 
 La consulta rectangular (`queryRange`) evita revisar regiones que no intersectan con el area consultada, lo que filtra drasticamente las particulas candidatas frente a una busqueda lineal. La consulta circular (`queryNearPoint`) se mantiene para vecinos cercanos y deteccion de colisiones.
 
-### Operaciones, Invariantes y Complejidad
+### ⏱️ Operaciones, Invariantes y Complejidad
 Para garantizar el correcto funcionamiento del QuadTree, se mantienen los siguientes **invariantes**:
 1. **Conservación espacial:** Toda partícula contenida en un nodo hijo está estrictamente contenida dentro de los límites espaciales del nodo padre.
 2. **Capacidad acotada:** Un nodo hoja contiene como máximo un número de partículas igual a su `capacidad máxima`. Si se excede, el nodo se convierte en un nodo interno (sin partículas propias) y da a luz a exactamente 4 hijos (Noroeste, Noreste, Suroeste, Sureste).
@@ -82,24 +82,24 @@ Para garantizar el correcto funcionamiento del QuadTree, se mantienen los siguie
 
 *(Nota: $k$ representa el número de partículas encontradas dentro de la región de consulta).*
 
-### Detección de colisiones: QuadTree vs Fuerza Bruta
+### ⚔️ Detección de colisiones: QuadTree vs Fuerza Bruta
 - **Fuerza bruta:** Compara cada partícula contra todas las demás (`n * (n - 1) / 2` comparaciones). Crece cuadráticamente con $N$.
 - **QuadTree:** Para cada partícula se crea una región (bounding box) alrededor de ella equivalente a su radio de alcance. Se consulta al QuadTree para obtener *sólo* las partículas candidatas cercanas. Finalmente, se aplica la fórmula de distancia exacta sólo a esos candidatos.
 
 Ambos métodos encuentran **exactamente las mismas colisiones**, pero el QuadTree lo logra realizando drásticamente menos comparaciones (distancia euclidiana).
 
-## Experimentos y Distribuciones
+## 📊 Experimentos y Distribuciones
 
 Se implementaron distintas distribuciones para poner a prueba el balanceo del QuadTree:
 1. **Uniforme:** Partículas esparcidas aleatoriamente por todo el espacio.
 2. **Clusters:** Grupos de partículas aglomeradas en puntos aleatorios siguiendo una distribución normal.
 3. **Alta densidad:** El 70% de las partículas apretadas en el centro (20% del espacio), y el 30% esparcido. 
 
-### Interpretación de Resultados
+### 💡 Interpretación de Resultados
 La fuerza bruta siempre revisa todos los pares, por lo que su tiempo colapsa rápidamente. 
 El QuadTree brilla en distribuciones uniformes donde la poda espacial es máxima. En escenarios de **clusters o alta densidad**, el QuadTree revisa más candidatos (porque muchas partículas se apilan en la misma región), lo que incrementa la profundidad del árbol y las colisiones reales, pero **incluso en el peor caso**, evita comparar contra el mundo entero, demostrando su enorme utilidad práctica para motores de físicas.
 
-## Estructura de archivos
+## 📂 Estructura de archivos
 
 ```text
 .
@@ -116,3 +116,11 @@ El QuadTree brilla en distribuciones uniformes donde la poda espacial es máxima
 │       └── components/     # QuadCanvas.vue, MetricsCard.vue, etc.
 └── ProyectoFinal-AED.pdf   # Rúbrica del proyecto
 ```
+
+## 👥 Equipo
+
+| Integrantes |
+| :--- |
+| Sebastian Hernan Reategui Bellido |
+| Yitzhak Abraham Namihas Millan |
+| Carla Viviana Molina Álvarez |
