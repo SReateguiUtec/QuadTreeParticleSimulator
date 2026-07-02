@@ -39,7 +39,6 @@ static bool pointInsideCircle(double pointX, double pointY, double centerX,
 QuadNode::QuadNode(Rectangle boundary) {
   this->boundary = boundary;
   this->divided = false;
-
   this->northeast = nullptr;
   this->northwest = nullptr;
   this->southeast = nullptr;
@@ -56,6 +55,7 @@ QuadNode::~QuadNode() {
 //////////////////////////////
 // Funcion minima: insertar objetos en el QuadTree.
 //////////////////////////////
+
 bool QuadNode::insert(const Particle &p, int capacity) {
   if (!boundary.contains(p)) {
     return false;
@@ -85,6 +85,7 @@ bool QuadNode::insert(const Particle &p, int capacity) {
 //////////////////////////////
 // Funcion minima: subdividir regiones cuando se supera la capacidad maxima.
 //////////////////////////////
+
 void QuadNode::subdivide(int capacity) {
   double x = boundary.x;
   double y = boundary.y;
@@ -114,6 +115,7 @@ void QuadNode::subdivide(int capacity) {
 //////////////////////////////
 // Funcion minima: consultar objetos dentro de una region rectangular.
 //////////////////////////////
+
 void QuadNode::queryRange(const Rectangle &range, vector<Particle> &found,
                           QueryStats &stats) const {
   stats.nodesVisited++;
@@ -184,13 +186,9 @@ QuadTree::QuadTree(Rectangle boundary, int capacity) {
   this->root = new QuadNode(boundary);
 }
 
-QuadTree::~QuadTree() {
-  delete root;
-}
+QuadTree::~QuadTree() { delete root; }
 
-bool QuadTree::insert(const Particle &p) {
-  return root->insert(p, capacity);
-}
+bool QuadTree::insert(const Particle &p) { return root->insert(p, capacity); }
 
 void QuadTree::queryRange(const Rectangle &range,
                           vector<Particle> &found) const {
@@ -206,6 +204,7 @@ void QuadTree::queryRange(const Rectangle &range, vector<Particle> &found,
 //////////////////////////////
 // Funcion minima: consultar objetos cercanos a un punto.
 //////////////////////////////
+
 vector<Particle> QuadTree::queryNearPoint(double x, double y,
                                           double radius) const {
   QueryStats stats{0, 0, 0};
@@ -233,17 +232,14 @@ void QuadTree::collectBoundaries(vector<Rectangle> &boundaries) const {
   root->collectBoundaries(boundaries);
 }
 
-void QuadTree::clear() {
-  root->clear();
-}
+void QuadTree::clear() { root->clear(); }
 
-void QuadTree::serialize(std::ostringstream &os) const {
-  root->serialize(os);
-}
+void QuadTree::serialize(std::ostringstream &os) const { root->serialize(os); }
 
 //////////////////////////////
 // Funcion minima: actualizar posiciones de objetos frame por frame.
 //////////////////////////////
+
 void updateParticles(vector<Particle> &particles, double width, double height) {
   for (Particle &p : particles) {
     p.x += p.vx;
@@ -272,6 +268,7 @@ bool areColliding(const Particle &a, const Particle &b) {
 //////////////////////////////
 // Funcion minima: solucion ingenua de fuerza bruta para comparar resultados.
 //////////////////////////////
+
 CollisionStats bruteForceCollisionStats(const vector<Particle> &particles) {
   CollisionStats stats{0, 0, 0, 0, 0};
 
@@ -291,6 +288,7 @@ CollisionStats bruteForceCollisionStats(const vector<Particle> &particles) {
 //////////////////////////////
 // Funcion minima: detectar posibles colisiones usando el QuadTree.
 //////////////////////////////
+
 CollisionStats quadTreeCollisionStats(QuadTree &qt,
                                       const vector<Particle> &particles) {
   CollisionStats stats{0, 0, 0, 0, 0};
