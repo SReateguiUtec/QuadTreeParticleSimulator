@@ -217,9 +217,11 @@ const draw = () => {
     drawBackground();
     drawBoundaries();
     drawScanLine();
-    drawQuery();
-    drawCollisions(byId);
-    drawParticles();
+    if (props.frame.particles.length > 0) {
+      drawQuery();
+      drawCollisions(byId);
+      drawParticles();
+    }
   } else {
     // Plain mode
     ctx.fillStyle = '#f8fafc';
@@ -232,29 +234,33 @@ const draw = () => {
     }
     ctx.stroke();
 
-    // Plain query region
-    ctx.beginPath();
-    if (props.frame.query.type === 'rectangle') {
-      const x = sx(props.frame.query.x);
-      const y = sy(props.frame.query.y);
-      const w = sl(props.frame.query.w ?? props.frame.query.radius * 2);
-      const h = (props.frame.query.h ?? props.frame.query.radius * 2) / props.data.height * H();
-      ctx.rect(x - w / 2, y - h / 2, w, h);
-    } else {
-      ctx.arc(sx(props.frame.query.x), sy(props.frame.query.y), sl(props.frame.query.radius), 0, Math.PI * 2);
-    }
-    ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
-    ctx.strokeStyle = '#6366f1';
-    ctx.lineWidth = 1.5;
-    ctx.fill();
-    ctx.stroke();
-
-    // Plain particles
-    for (const p of props.frame.particles) {
+    if (props.frame.particles.length > 0) {
+      // Plain query region
       ctx.beginPath();
-      ctx.arc(sx(p.x), sy(p.y), Math.max(3, sl(p.r) * 0.7), 0, Math.PI * 2);
-      ctx.fillStyle = p.colliding ? '#ef4444' : p.candidate ? '#f59e0b' : '#3b82f6';
+      if (props.frame.query.type === 'rectangle') {
+        const x = sx(props.frame.query.x);
+        const y = sy(props.frame.query.y);
+        const w = sl(props.frame.query.w ?? props.frame.query.radius * 2);
+        const h = (props.frame.query.h ?? props.frame.query.radius * 2) / props.data.height * H();
+        ctx.rect(x - w / 2, y - h / 2, w, h);
+      } else {
+        ctx.arc(sx(props.frame.query.x), sy(props.frame.query.y), sl(props.frame.query.radius), 0, Math.PI * 2);
+      }
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
       ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Plain particles
+      for (const p of props.frame.particles) {
+        ctx.beginPath();
+        ctx.arc(sx(p.x), sy(p.y), Math.max(3, sl(p.r) * 0.7), 0, Math.PI * 2);
+        ctx.fillStyle = p.colliding ? '#ef4444' : p.candidate ? '#f59e0b' : '#3b82f6';
+        ctx.fill();
+      }
     }
   }
 

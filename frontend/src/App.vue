@@ -181,7 +181,7 @@ const speedup = computed(() =>
           </h1>
         </div>
         <p class="text-[10px] text-slate-500 ml-6 font-mono tracking-widest">
-          2D PARTICLE ENGINE · INTERACTIVE · C++ BACKEND
+          2D PARTICLE ENGINE · INTERACTIVE
         </p>
       </div>
 
@@ -319,23 +319,17 @@ const speedup = computed(() =>
             </select>
           </label>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-[10px] font-semibold tracking-widest text-transparent uppercase select-none">·</span>
-            <button @click="generateParticles"
-                    class="px-4 py-1.5 rounded-lg text-sm font-bold border transition-all hover:brightness-110"
-                    style="background:rgba(99,102,241,0.2);border-color:rgba(99,102,241,0.5);color:#818cf8;">
-              Generar
-            </button>
-          </label>
+          <button @click="generateParticles"
+                  class="px-4 py-1.5 rounded-lg text-sm font-bold border transition-all hover:brightness-110 mb-px"
+                  style="background:rgba(99,102,241,0.2);border-color:rgba(99,102,241,0.5);color:#818cf8;">
+            Generar
+          </button>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-[10px] font-semibold tracking-widest text-transparent uppercase select-none">·</span>
-            <button @click="clearParticles"
-                    class="px-4 py-1.5 rounded-lg text-sm font-bold border transition-all hover:brightness-110"
-                    style="background:rgba(244,63,94,0.12);border-color:rgba(244,63,94,0.4);color:#f87171;">
-              Limpiar
-            </button>
-          </label>
+          <button @click="clearParticles"
+                  class="px-4 py-1.5 rounded-lg text-sm font-bold border transition-all hover:brightness-110 mb-px"
+                  style="background:rgba(244,63,94,0.12);border-color:rgba(244,63,94,0.4);color:#f87171;">
+            Limpiar
+          </button>
         </div>
 
         <!-- CANVAS with click-to-add -->

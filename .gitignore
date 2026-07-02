@@ -10,3 +10,5 @@ CMakeCache.txt
 *.so
 *.dylib
 *.ddi.i
+
+.idea/

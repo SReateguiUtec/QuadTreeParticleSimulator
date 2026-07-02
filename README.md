@@ -2,13 +2,7 @@
 
 Un motor físico de colisiones de partículas 2D de alto rendimiento. Implementa un **QuadTree** desde cero para acelerar la detección de posibles colisiones entre partículas circulares en un espacio 2D. La idea principal es comparar empíricamente el enfoque con QuadTree contra una solución ingenua de fuerza bruta que revisa todos los pares de partículas.
 
-El proyecto corresponde a la **opción A (QuadTree)** del Proyecto 2 del curso de Algoritmos y Estructuras de Datos.
-
 Utiliza una arquitectura híbrida donde el backend en **C++** calcula la física y la estructura del árbol espacial usando Server-Sent Events (SSE) para enviar la simulación en tiempo real a una interfaz visual construida en **Vue.js + Tailwind CSS**.
-
-**Repositorio:** [YiT-73/proyecto2-quad-tree](https://github.com/YiT-73/proyecto2-quad-tree)
-
----
 
 ## Características Principales
 
@@ -18,8 +12,6 @@ Utiliza una arquitectura híbrida donde el backend en **C++** calcula la física
 - **Métricas en Vivo:** El dashboard compara en tiempo real las operaciones (comparaciones y tiempos) realizadas por el QuadTree vs la Fuerza Bruta.
 - **Múltiples Distribuciones Espaciales:** Uniforme, clusters, zona de alta densidad y galaxia para probar escenarios con diferente densidad.
 - **Datos de entrada configurables:** número de partículas, tamaño del espacio 2D, capacidad por nodo, radio, velocidad y distribución inicial.
-
----
 
 ## Cómo ejecutar el proyecto
 
@@ -46,8 +38,6 @@ npm run dev
 
 Abre en tu navegador la URL que indique Vite (usualmente `http://localhost:5173`).
 
----
-
 ## 🎮 Uso de la Interfaz
 
 1. **Modo Interactivo (Click):** Con el modo click activado, toca en cualquier parte del canvas para insertar una nueva partícula. Verás el QuadTree subdividirse automáticamente para acomodarla.
@@ -56,8 +46,6 @@ Abre en tu navegador la URL que indique Vite (usualmente `http://localhost:5173`
 4. **Distribuciones masivas:** Usa el panel superior para inyectar cientos de partículas a la vez en distribuciones uniformes, clusters, o alta densidad.
 5. **Consulta rectangular:** El rectángulo resaltado en el canvas representa una consulta `queryRange`; las partículas naranjas son los candidatos retornados por el QuadTree.
 6. **Vista de Organigrama:** Habilita este switch para observar un trazado ortogonal estático que representa la topología en forma de árbol (Raíz → Nodos → Partículas) del QuadTree en el frame actual.
-
----
 
 ## Implementación y Algoritmos
 
@@ -100,8 +88,6 @@ Para garantizar el correcto funcionamiento del QuadTree, se mantienen los siguie
 
 Ambos métodos encuentran **exactamente las mismas colisiones**, pero el QuadTree lo logra realizando drásticamente menos comparaciones (distancia euclidiana).
 
----
-
 ## Experimentos y Distribuciones
 
 Se implementaron distintas distribuciones para poner a prueba el balanceo del QuadTree:
@@ -112,8 +98,6 @@ Se implementaron distintas distribuciones para poner a prueba el balanceo del Qu
 ### Interpretación de Resultados
 La fuerza bruta siempre revisa todos los pares, por lo que su tiempo colapsa rápidamente. 
 El QuadTree brilla en distribuciones uniformes donde la poda espacial es máxima. En escenarios de **clusters o alta densidad**, el QuadTree revisa más candidatos (porque muchas partículas se apilan en la misma región), lo que incrementa la profundidad del árbol y las colisiones reales, pero **incluso en el peor caso**, evita comparar contra el mundo entero, demostrando su enorme utilidad práctica para motores de físicas.
-
----
 
 ## Estructura de archivos
 
