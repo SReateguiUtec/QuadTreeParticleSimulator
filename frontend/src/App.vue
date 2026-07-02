@@ -315,7 +315,6 @@ const speedup = computed(() =>
               <option :value="0">Uniforme</option>
               <option :value="1">Clusters</option>
               <option :value="2">Alta Densidad</option>
-              <option :value="3">Galaxia</option>
             </select>
           </label>
 
